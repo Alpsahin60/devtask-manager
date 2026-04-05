@@ -1,0 +1,48 @@
+{
+  "name": "devtask-manager",
+  "version": "1.0.0",
+  "description": "Full-stack task management application with JWT auth and Kanban board",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:frontend": "cd frontend && npm run start",
+    "start:backend": "cd backend && npm run start",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "test:db": "cd backend && npm run test:db",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "format:backend": "cd backend && npm run format",
+    "clean": "rm -rf node_modules frontend/node_modules backend/node_modules frontend/.next backend/dist",
+    "type-check": "cd frontend && npx tsc --noEmit && cd ../backend && npx tsc --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Alpsahin60/devtask-manager.git"
+  },
+  "keywords": [
+    "task-management",
+    "kanban",
+    "nextjs", 
+    "nodejs",
+    "typescript",
+    "mongodb",
+    "jwt-auth",
+    "fullstack"
+  ],
+  "author": "Alpsahin60",
+  "license": "MIT"
+}
