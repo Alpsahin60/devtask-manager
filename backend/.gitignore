@@ -6,6 +6,14 @@ dist/
 
 # Environment variables — NEVER commit this!
 .env
+.env.local
+
+# Auth-Token exports / curl cookie jars — NEVER commit
+# (Added 2026-05-14 after a token leak incident; broad .txt match is
+# intentional: this folder never holds legitimate .txt content.)
+*.txt
+cookies*.txt
+admin_cookies*.txt
 
 # Logs
 *.log
