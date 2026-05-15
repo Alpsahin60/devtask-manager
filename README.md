@@ -22,7 +22,7 @@ A full-stack task management application with JWT authentication, drag & drop fu
 ## Tech Stack
 
 **Frontend**
-- Next.js 16 (App Router)
+- Next.js 14.2.35 (App Router)
 - TypeScript
 - Tailwind CSS
 - Framer Motion (Drag & Drop)
