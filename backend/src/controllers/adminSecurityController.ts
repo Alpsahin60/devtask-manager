@@ -1,10 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { SecurityService } from '../services/SecurityService';
-import { TokenBlacklistService } from '../models/BlacklistedToken';
+import { TokenBlacklistService, IBlacklistedToken } from '../models/BlacklistedToken';
 import { User } from '../models/User';
 import { AuthRequest } from '../types';
 import { AppError } from '../middleware/errorMiddleware';
+
+// ─── Local Types ───────────────────────────────────────────────────────────
+
+type UserActionResult =
+  | { accountUnlocked: true }
+  | { accountLocked: true }
+  | { attemptsReset: true }
+  | { tokensBlacklisted: number }
+  | Record<string, never>;
+
+type UserSecurityStats = {
+  totalUsers: number;
+  lockedUsers: number;
+  usersWithAttempts: number;
+  lockRate: string | number;
+};
+
+type SecurityAnalyticsData = {
+  period: { days: number; startDate: Date; endDate: Date };
+  trends: {
+    logins: Awaited<ReturnType<typeof SecurityService.getLoginTrends>>;
+    errors: Awaited<ReturnType<typeof SecurityService.getErrorTrends>>;
+  };
+  topIPs: Awaited<ReturnType<typeof SecurityService.getTopIPs>>;
+  eventDistribution: Awaited<ReturnType<typeof SecurityService.getEventDistribution>>;
+};
 
 /**
  * Admin Security Controller
@@ -193,7 +219,7 @@ export const performUserAction = async (req: AuthRequest, res: Response, next: N
       throw new AppError('Target user not found', 404);
     }
 
-    let result: any = {};
+    let result: UserActionResult = {};
 
     switch (action) {
       case 'unlock':
@@ -213,13 +239,14 @@ export const performUserAction = async (req: AuthRequest, res: Response, next: N
         result = { attemptsReset: true };
         break;
 
-      case 'force-logout':
+      case 'force-logout': {
         const blacklistedCount = await TokenBlacklistService.blacklistAllUserTokens(
-          userId, 
+          userId,
           'admin_revocation'
         );
         result = { tokensBlacklisted: blacklistedCount };
         break;
+      }
 
       default:
         throw new AppError('Invalid action', 400);
@@ -275,7 +302,7 @@ export const getSecurityAnalytics = async (req: Request, res: Response, next: Ne
 /**
  * Get user security statistics
  */
-async function getUserSecurityStats(): Promise<any> {
+async function getUserSecurityStats(): Promise<UserSecurityStats> {
   const totalUsers = await User.countDocuments();
   const lockedUsers = await User.countDocuments({ isLocked: true });
   const usersWithAttempts = await User.countDocuments({ loginAttempts: { $gt: 0 } });
@@ -327,11 +354,13 @@ function getEventSeverity(eventType: string): 'low' | 'medium' | 'high' | 'criti
 /**
  * Get blacklisted tokens with filtering
  */
-async function getBlacklistedTokensWithFilter(query: any): Promise<any[]> {
+async function getBlacklistedTokensWithFilter(
+  query: z.infer<typeof blacklistQuerySchema>
+): Promise<IBlacklistedToken[]> {
   // This would be implemented with the BlacklistedToken model
   // For now, returning a placeholder
   return TokenBlacklistService.getUserBlacklistedTokens(
-    query.userId || '', 
+    query.userId || '',
     query.limit
   );
 }
@@ -339,7 +368,7 @@ async function getBlacklistedTokensWithFilter(query: any): Promise<any[]> {
 /**
  * Generate security analytics for the dashboard
  */
-async function generateSecurityAnalytics(days: number): Promise<any> {
+async function generateSecurityAnalytics(days: number): Promise<SecurityAnalyticsData> {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 

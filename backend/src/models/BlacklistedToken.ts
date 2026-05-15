@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model, FilterQuery } from 'mongoose';
 
 /**
  * Interface for JWT Token Blacklist documents
@@ -95,9 +95,9 @@ BlacklistedTokenSchema.statics.addToBlacklist = async function(
       expiresAt,
       blacklistedAt: new Date(),
     });
-  } catch (error: any) {
-    // Handle duplicate token errors gracefully
-    if (error.code === 11000) {
+  } catch (error: unknown) {
+    // Handle duplicate token errors gracefully — MongoDB duplicate-key error has code 11000
+    if (error instanceof Error && 'code' in error && (error as Error & { code?: number }).code === 11000) {
       // Token already blacklisted, return existing record
       return await this.findOne({ token });
     }
@@ -115,7 +115,7 @@ BlacklistedTokenSchema.statics.blacklistUserTokens = async function(
   tokenType?: 'access' | 'refresh',
   reason: string = 'user_action'
 ): Promise<number> {
-  const filter: any = { userId };
+  const filter: FilterQuery<IBlacklistedToken> = { userId };
   if (tokenType) {
     filter.tokenType = tokenType;
   }
@@ -262,12 +262,19 @@ export class TokenBlacklistService {
       ])
     ]);
 
-    const byType = typeStats.reduce((acc: any, item: any) => {
-      acc[item._id] = item.count;
-      return acc;
-    }, { access: 0, refresh: 0 });
+    type AggBucket = { _id: string; count: number };
 
-    const byReason = reasonStats.reduce((acc: any, item: any) => {
+    const byType = (typeStats as AggBucket[]).reduce<{ access: number; refresh: number }>(
+      (acc, item) => {
+        if (item._id === 'access' || item._id === 'refresh') {
+          acc[item._id] = item.count;
+        }
+        return acc;
+      },
+      { access: 0, refresh: 0 }
+    );
+
+    const byReason = (reasonStats as AggBucket[]).reduce<Record<string, number>>((acc, item) => {
       acc[item._id] = item.count;
       return acc;
     }, {});

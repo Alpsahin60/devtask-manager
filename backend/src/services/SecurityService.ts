@@ -1,5 +1,6 @@
 import { Request } from 'express';
-import { SecurityEvent } from '../models/SecurityEvent';
+import type { FilterQuery, Types } from 'mongoose';
+import { SecurityEvent, ISecurityEvent, ISecurityEventDocument } from '../models/SecurityEvent';
 
 export interface SecurityEventData {
   userId?: string;
@@ -10,8 +11,54 @@ export interface SecurityEventData {
             'registration_success' | 'registration_failed' | 'registration_blocked' |
             'token_refresh_success' | 'token_refresh_failed' | 'token_refresh_blocked' |
             'logout_success' | 'admin_action';
-  details?: any;
+  details?: Record<string, unknown> | string;
 }
+
+// Shape of a security event after `.lean()` — plain object, no Mongoose methods
+type LeanSecurityEvent = ISecurityEvent & {
+  _id: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+// Aggregation result shapes
+type DailyTrendBucket = {
+  _id: { date: string; type: string };
+  count: number;
+};
+
+type TopIPBucket = {
+  _id: string;
+  count: number;
+  lastSeen: Date;
+  eventTypes: string[];
+};
+
+type EventTypeBucket = {
+  _id: string;
+  count: number;
+};
+
+type DailyCountBucket = {
+  _id: string;
+  count: number;
+};
+
+type EventStatistics = {
+  totalEvents: number;
+  eventTypes: EventTypeBucket[];
+  dailyStats: DailyCountBucket[];
+  period: { days: number; startDate: Date; endDate: Date };
+};
+
+type SuspiciousActivityRow = {
+  id: Types.ObjectId;
+  type: LeanSecurityEvent['eventType'];
+  email?: string;
+  ipAddress: string;
+  timestamp: Date;
+  details?: Record<string, unknown> | string;
+};
 
 /**
  * Security Service for logging and monitoring security events
@@ -32,7 +79,6 @@ export class SecurityService {
       
       // In production, you might want to send to external monitoring service
       if (process.env.NODE_ENV === 'production' && eventData.eventType === 'suspicious_activity') {
-        // TODO: Integration with monitoring services (e.g., Datadog, New Relic, etc.)
         console.warn(`[SECURITY ALERT] Suspicious activity detected: ${eventData.details}`);
       }
     } catch (error) {
@@ -112,23 +158,23 @@ export class SecurityService {
   /**
    * Get recent security events for dashboard
    */
-  static async getRecentSecurityEvents(limit: number = 10): Promise<any[]> {
+  static async getRecentSecurityEvents(limit: number = 10): Promise<LeanSecurityEvent[]> {
     return await SecurityEvent.find()
       .sort({ createdAt: -1 })
       .limit(limit)
-      .lean();
+      .lean<LeanSecurityEvent[]>();
   }
 
   /**
    * Get suspicious activities summary
    */
-  static async getSuspiciousActivities(limit: number = 5): Promise<any[]> {
+  static async getSuspiciousActivities(limit: number = 5): Promise<SuspiciousActivityRow[]> {
     const suspiciousEvents = await SecurityEvent.find({
       eventType: { $in: ['login_failed', 'account_locked', 'suspicious_activity'] }
     })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .lean();
+    .lean<LeanSecurityEvent[]>();
 
     return suspiciousEvents.map(event => ({
       id: event._id,
@@ -151,16 +197,17 @@ export class SecurityService {
     ipAddress?: string;
     page: number;
     limit: number;
-  }): Promise<any[]> {
-    const query: any = {};
+  }): Promise<LeanSecurityEvent[]> {
+    const query: FilterQuery<ISecurityEventDocument> = {};
 
     if (filter.userId) query.userId = filter.userId;
-    if (filter.eventType) query.eventType = filter.eventType;
+    if (filter.eventType) query.eventType = filter.eventType as ISecurityEventDocument['eventType'];
     if (filter.ipAddress) query.ipAddress = filter.ipAddress;
     if (filter.startDate || filter.endDate) {
-      query.createdAt = {};
-      if (filter.startDate) query.createdAt.$gte = filter.startDate;
-      if (filter.endDate) query.createdAt.$lte = filter.endDate;
+      const createdAtRange: { $gte?: Date; $lte?: Date } = {};
+      if (filter.startDate) createdAtRange.$gte = filter.startDate;
+      if (filter.endDate) createdAtRange.$lte = filter.endDate;
+      query.createdAt = createdAtRange;
     }
 
     const skip = (filter.page - 1) * filter.limit;
@@ -169,7 +216,7 @@ export class SecurityService {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(filter.limit)
-      .lean();
+      .lean<LeanSecurityEvent[]>();
   }
 
   /**
@@ -191,8 +238,8 @@ export class SecurityService {
   /**
    * Get login trends for analytics
    */
-  static async getLoginTrends(startDate: Date, endDate: Date): Promise<any[]> {
-    const trends = await SecurityEvent.aggregate([
+  static async getLoginTrends(startDate: Date, endDate: Date): Promise<DailyTrendBucket[]> {
+    const trends = await SecurityEvent.aggregate<DailyTrendBucket>([
       {
         $match: {
           eventType: { $in: ['login_success', 'login_failed'] },
@@ -219,15 +266,15 @@ export class SecurityService {
   /**
    * Get error trends for analytics
    */
-  static async getErrorTrends(startDate: Date, endDate: Date): Promise<any[]> {
+  static async getErrorTrends(startDate: Date, endDate: Date): Promise<DailyTrendBucket[]> {
     const errorTypes = [
-      'login_failed', 
-      'token_refresh_failed', 
+      'login_failed',
+      'token_refresh_failed',
       'registration_failed',
       'account_locked'
     ];
 
-    return await SecurityEvent.aggregate([
+    return await SecurityEvent.aggregate<DailyTrendBucket>([
       {
         $match: {
           eventType: { $in: errorTypes },
@@ -256,8 +303,8 @@ export class SecurityService {
     startDate: Date, 
     endDate: Date, 
     limit: number = 10
-  ): Promise<any[]> {
-    return await SecurityEvent.aggregate([
+  ): Promise<TopIPBucket[]> {
+    return await SecurityEvent.aggregate<TopIPBucket>([
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate },
@@ -284,8 +331,8 @@ export class SecurityService {
   /**
    * Get event type distribution for analytics
    */
-  static async getEventDistribution(startDate: Date, endDate: Date): Promise<any[]> {
-    return await SecurityEvent.aggregate([
+  static async getEventDistribution(startDate: Date, endDate: Date): Promise<EventTypeBucket[]> {
+    return await SecurityEvent.aggregate<EventTypeBucket>([
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate }
@@ -320,18 +367,18 @@ export class SecurityService {
   /**
    * Get security event statistics
    */
-  static async getEventStatistics(days: number = 30): Promise<any> {
+  static async getEventStatistics(days: number = 30): Promise<EventStatistics> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
     const [totalEvents, eventTypes, dailyStats] = await Promise.all([
       SecurityEvent.countDocuments({ createdAt: { $gte: startDate } }),
-      SecurityEvent.aggregate([
+      SecurityEvent.aggregate<EventTypeBucket>([
         { $match: { createdAt: { $gte: startDate } } },
         { $group: { _id: '$eventType', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
       ]),
-      SecurityEvent.aggregate([
+      SecurityEvent.aggregate<DailyCountBucket>([
         { $match: { createdAt: { $gte: startDate } } },
         {
           $group: {

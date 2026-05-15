@@ -279,14 +279,15 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
         message: 'Token refreshed',
         data: { accessToken },
       });
-    } catch (tokenError: any) {
+    } catch (tokenError: unknown) {
+      const errorMessage = tokenError instanceof Error ? tokenError.message : String(tokenError);
       await SecurityService.logEvent({
         eventType: 'token_refresh_failed',
         userId: undefined,
         email: undefined,
         ipAddress: clientInfo.ipAddress,
         userAgent: clientInfo.userAgent,
-        details: { reason: 'Invalid refresh token', error: tokenError.message }
+        details: { reason: 'Invalid refresh token', error: errorMessage }
       });
       throw new AppError('Invalid refresh token', 401);
     }

@@ -36,9 +36,9 @@ export const protect = async (req: AuthRequest, _res: Response, next: NextFuncti
     const decoded = await verifyAccessToken(token);
     req.user = decoded;
     next();
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle token revocation errors
-    if (error.message === 'Token has been revoked') {
+    if (error instanceof Error && error.message === 'Token has been revoked') {
       next(new AppError('Authentication failed — token has been revoked', 401));
     } else {
       next(error);

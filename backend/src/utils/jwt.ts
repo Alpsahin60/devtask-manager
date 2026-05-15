@@ -89,12 +89,12 @@ export const verifyRefreshTokenSync = (token: string): JwtPayload => {
  */
 export const getTokenExpiration = (token: string): Date => {
   try {
-    const decoded = jwt.decode(token) as any;
+    const decoded = jwt.decode(token) as (JwtPayload & { exp?: number }) | null;
     if (!decoded || !decoded.exp) {
       throw new Error('Invalid token or missing expiration');
     }
     return new Date(decoded.exp * 1000); // Convert from seconds to milliseconds
-  } catch (error) {
+  } catch {
     throw new Error('Failed to extract token expiration');
   }
 };
@@ -115,7 +115,7 @@ export const decodeToken = (token: string): JwtPayload | null => {
  */
 export const isTokenExpired = (token: string): boolean => {
   try {
-    const decoded = jwt.decode(token) as any;
+    const decoded = jwt.decode(token) as (JwtPayload & { exp?: number }) | null;
     if (!decoded || !decoded.exp) {
       return true; // Treat invalid tokens as expired
     }

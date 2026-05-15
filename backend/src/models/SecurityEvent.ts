@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface ISecurityEventDocument extends Document {
+// Plain-shape interface — usable for lean queries and POJO operations
+export interface ISecurityEvent {
   userId?: mongoose.Types.ObjectId;
   email?: string;
   ipAddress: string;
@@ -9,9 +10,11 @@ export interface ISecurityEventDocument extends Document {
             'registration_success' | 'registration_failed' | 'registration_blocked' |
             'token_refresh_success' | 'token_refresh_failed' | 'token_refresh_blocked' |
             'logout_success' | 'admin_action';
-  details?: any;
+  details?: Record<string, unknown> | string;
   timestamp: Date;
 }
+
+export interface ISecurityEventDocument extends ISecurityEvent, Document {}
 
 const securityEventSchema = new Schema<ISecurityEventDocument>(
   {

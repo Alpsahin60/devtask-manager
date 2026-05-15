@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, UpdateQuery } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUserDocument extends Document {
@@ -126,15 +126,18 @@ userSchema.methods.incLoginAttempts = async function(): Promise<void> {
     });
   }
 
-  const updates: any = {
+  const updates: UpdateQuery<IUserDocument> = {
     $inc: { loginAttempts: 1 },
-    $set: { lastFailedLogin: Date.now() }
+    $set: { lastFailedLogin: new Date() }
   };
 
   // Lock account after max attempts
   if (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS && !this.isAccountLocked()) {
-    updates.$set.lockedUntil = Date.now() + LOCK_TIME;
-    updates.$set.isLocked = true;
+    updates.$set = {
+      ...updates.$set,
+      lockedUntil: new Date(Date.now() + LOCK_TIME),
+      isLocked: true,
+    };
   }
 
   return this.updateOne(updates);
