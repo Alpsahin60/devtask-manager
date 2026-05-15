@@ -9,8 +9,8 @@ import { useEffect } from 'react';
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100),
   description: z.string().max(500).optional(),
-  status: z.enum(['todo', 'in-progress', 'done']).default('todo'),
-  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  status: z.enum(['todo', 'in-progress', 'done']),
+  priority: z.enum(['low', 'medium', 'high']),
   deadline: z.string().optional(),
 });
 
@@ -30,7 +30,13 @@ export const TaskModal = ({ task, onSubmit, onClose }: TaskModalProps) => {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<TaskForm>({ resolver: zodResolver(taskSchema) });
+  } = useForm<TaskForm>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      status: 'todo',
+      priority: 'medium',
+    },
+  });
 
   // Populate form when editing
   useEffect(() => {
