@@ -21,7 +21,7 @@ const testConnection = async () => {
     if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
       console.log('\n💡 Possible solutions:');
       console.log('1. Install and start local MongoDB server');
-      console.log('2. Use MongoDB Atlas (cloud) - see MONGODB_SETUP.md');
+      console.log('2. Use MongoDB Atlas (cloud) - see CONTRIBUTING.md "MongoDB einrichten"');
       console.log('3. Check your MONGODB_URI in .env file');
     }
   } finally {

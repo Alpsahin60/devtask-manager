@@ -61,9 +61,6 @@ Hauptbranch: `main`. Da das Projekt solo entwickelt wird, gibt es kein Pull-Requ
 devtask-manager/
 ├── package.json              # Workspace-Root, Sammel-Scripts
 ├── README.md                 # Kurz-Vorstellung
-├── DEVELOPMENT.md            # Detailliertes Setup
-├── MONGODB_SETUP.md          # MongoDB-Onboarding (Atlas/lokal)
-├── SECURITY_IMPLEMENTATION_SUMMARY.md
 ├── CONTRIBUTING.md           # ← dieses Dokument
 │
 ├── frontend/                 # Next.js-App
@@ -126,7 +123,39 @@ devtask-manager/
 - **Node.js** 18 oder neuer (`node -v`)
 - **npm** (kommt mit Node)
 - **Git**
-- **MongoDB** — entweder lokal installiert (`mongodb://localhost:27017`) oder ein **MongoDB-Atlas**-Cluster. Details in `MONGODB_SETUP.md`.
+- **MongoDB** — entweder lokal installiert oder ein MongoDB-Atlas-Cluster (siehe nächste Sub-Section)
+
+### MongoDB einrichten
+
+Es gibt zwei Optionen — eine reicht.
+
+**Option A: MongoDB Atlas (empfohlen, ca. 5 Minuten)**
+
+1. Account auf [cloud.mongodb.com](https://cloud.mongodb.com) anlegen (kostenlos, keine Kreditkarte).
+2. Neues Projekt → "Build a Database" → **Free Tier (M0)** wählen, Region nahe SG.
+3. **Database Access:** User mit Read/Write-Permission anlegen.
+4. **Network Access:** eigene IP freigeben (oder `0.0.0.0/0` für lokale Entwicklung).
+5. "Connect" → "Connect your application" → Connection-String kopieren und in `backend/.env` eintragen:
+   ```
+   MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/devtask-manager
+   ```
+
+**Option B: Lokales MongoDB**
+
+Windows via winget:
+```bash
+winget install MongoDB.Server
+net start MongoDB
+```
+
+Dann in `backend/.env`:
+```
+MONGODB_URI=mongodb://localhost:27017/devtask-manager
+```
+
+Verifikation: `cd backend && npm run test:db` testet die Connection und listet die Collections — bei Erfolg `✅ MongoDB connection successful!`.
+
+Der Backend-Start (`npm run dev`) bricht ohne erreichbare MongoDB-Connection ab — es gibt kein In-Memory-Fallback. Das ist gewollt: ein halb-funktionaler Server würde nur verwirren.
 
 ### Initiales Setup
 
@@ -291,7 +320,7 @@ Ein Task gilt erst dann als erledigt, wenn:
 3. **`npm run type-check` ist grün** auf beiden Workspaces.
 4. **Keine `.env`-Files oder Secrets staged** — vor jedem `git add` kurz prüfen.
 5. **Keine offenen `TODO`/`FIXME`-Kommentare** im neuen Code (entweder direkt lösen oder als Issue tracken).
-6. **Doku aktualisiert**, wenn sich Setup, API-Contract oder Datenmodell geändert hat (README, DEVELOPMENT.md, dieses Dokument).
+6. **Doku aktualisiert**, wenn sich Setup, API-Contract oder Datenmodell geändert hat (README und dieses Dokument).
 7. **Conventional-Commit-Nachricht** geschrieben.
 
 ---

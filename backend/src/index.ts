@@ -4,13 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 
-// Global type for mock database flag
-declare global {
-  var useMockDatabase: boolean;
-}
-
 import { connectDatabase } from './config/database';
-import { connectMockDatabase } from './config/mockDatabase';
 import { errorHandler } from './middleware/errorMiddleware';
 import { 
   securityHeaders, 
@@ -125,21 +119,11 @@ app.use(errorHandler);
 // ─── Start Server ─────────────────────────────────────────────────────────────
 
 const start = async (): Promise<void> => {
-  try {
-    // Try to connect to MongoDB first
-    await connectDatabase();
-    global.useMockDatabase = false;
-  } catch (error) {
-    console.warn('⚠️  MongoDB not available, switching to Mock Database');
-    console.warn('📖 For MongoDB setup instructions, see MONGODB_SETUP.md');
-    await connectMockDatabase();
-    global.useMockDatabase = true;
-  }
+  await connectDatabase();
 
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV ?? 'development'}`);
-    console.log(`📊 Database: ${global.useMockDatabase ? 'Mock (In-Memory)' : 'MongoDB'}`);
   });
 };
 

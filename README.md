@@ -25,7 +25,7 @@ A full-stack task management application with JWT authentication, drag & drop fu
 - Next.js 14.2.35 (App Router)
 - TypeScript
 - Tailwind CSS
-- Framer Motion (Drag & Drop)
+- @dnd-kit (Drag & Drop)
 
 **Backend**
 - Node.js + Express.js
@@ -61,7 +61,7 @@ The application will be available at:
 - Frontend: http://localhost:3000  
 - Backend API: http://localhost:5000/api
 
-**📖 For detailed setup instructions, see [DEVELOPMENT.md](./DEVELOPMENT.md)**
+**For detailed setup instructions, see [CONTRIBUTING.md](./CONTRIBUTING.md).**
 
 # Run development server
 npm run dev
