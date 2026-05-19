@@ -9,7 +9,7 @@ import {
 } from '../controllers/adminSecurityController';
 import { protect } from '../middleware/authMiddleware';
 import { validate } from '../middleware/validationMiddleware';
-import { z } from 'zod';
+import { userActionSchema } from '../schemas/adminSchemas';
 
 const router = express.Router();
 
@@ -46,12 +46,6 @@ router.get('/blacklist', getBlacklistedTokens);
  * @access  Admin only
  * @body    { userId, action, reason }
  */
-const userActionSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-  action: z.enum(['unlock', 'lock', 'reset-attempts', 'force-logout']),
-  reason: z.string().min(5, 'Reason must be at least 5 characters'),
-});
-
 router.post('/user-action', validate(userActionSchema), performUserAction);
 
 /**

@@ -5,6 +5,7 @@ import { TokenBlacklistService, IBlacklistedToken } from '../models/BlacklistedT
 import { User } from '../models/User';
 import { AuthRequest } from '../types';
 import { AppError } from '../middleware/errorMiddleware';
+import type { UserActionInput } from '../schemas/adminSchemas';
 
 // ─── Local Types ───────────────────────────────────────────────────────────
 
@@ -58,11 +59,9 @@ const blacklistQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
 });
 
-const userActionSchema = z.object({
-  userId: z.string(),
-  action: z.enum(['unlock', 'lock', 'reset-attempts', 'force-logout']),
-  reason: z.string().min(5, 'Reason must be at least 5 characters'),
-});
+// userActionSchema lives in schemas/adminSchemas.ts — single source of truth.
+// Body is validated by validate(userActionSchema) middleware in adminRoutes, so the
+// controller can trust req.body shape and uses UserActionInput for type-safety only.
 
 // ─── Middleware ─────────────────────────────────────────────────────────────
 
@@ -211,7 +210,7 @@ export const getBlacklistedTokens = async (req: Request, res: Response, next: Ne
  */
 export const performUserAction = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { userId, action, reason } = userActionSchema.parse(req.body);
+    const { userId, action, reason } = req.body as UserActionInput;
     const adminUserId = req.user?.userId;
 
     const targetUser = await User.findById(userId);
