@@ -41,6 +41,46 @@ export interface ITask {
   updatedAt: Date;
 }
 
+// ─── Scrum Types ──────────────────────────────────────────────────────────────
+
+export type SprintStatus = 'planned' | 'active' | 'completed' | 'cancelled';
+export type RetroCategory = 'mad' | 'sad' | 'glad';
+
+export interface ISprint {
+  _id: Types.ObjectId;
+  name: string;
+  goal?: string;
+  startDate: Date;
+  endDate: Date;
+  status: SprintStatus;
+  reviewNotes?: string;
+  owner: Types.ObjectId; // reference to User
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IStandupEntry {
+  _id: Types.ObjectId;
+  sprintId: Types.ObjectId; // reference to Sprint
+  owner: Types.ObjectId;    // denormalised for direct owner-isolation queries
+  date: Date;               // normalised to 00:00 UTC by the service layer
+  yesterday?: string;
+  today?: string;
+  blockers?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IRetroItem {
+  _id: Types.ObjectId;
+  sprintId: Types.ObjectId; // reference to Sprint
+  owner: Types.ObjectId;    // denormalised for direct owner-isolation queries
+  category: RetroCategory;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // ─── API Response Types ───────────────────────────────────────────────────────
 
 export interface ApiResponse<T = unknown> {
