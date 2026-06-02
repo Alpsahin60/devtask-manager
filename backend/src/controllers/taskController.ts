@@ -1,20 +1,12 @@
 import { Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { Task } from '../models/Task';
 import { AppError } from '../middleware/errorMiddleware';
 import { AuthRequest } from '../types';
+import type { CreateTaskInput, UpdateTaskInput } from '../schemas/taskSchemas';
 
-// ─── Validation Schemas ───────────────────────────────────────────────────────
-
-export const createTaskSchema = z.object({
-  title: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
-  status: z.enum(['todo', 'in-progress', 'done']).default('todo'),
-  priority: z.enum(['low', 'medium', 'high']).default('medium'),
-  deadline: z.string().datetime({ offset: true }).optional(),
-});
-
-export const updateTaskSchema = createTaskSchema.partial();
+// Validation schemas live in schemas/taskSchemas.ts — single source of truth.
+// Routes apply them via validate(); controllers consume the inferred types
+// for type-safety only and trust the already-validated req.body.
 
 // ─── Controllers ─────────────────────────────────────────────────────────────
 
@@ -72,7 +64,7 @@ export const getTaskById = async (req: AuthRequest, res: Response, next: NextFun
  */
 export const createTask = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const data = req.body as z.infer<typeof createTaskSchema>;
+    const data = req.body as CreateTaskInput;
 
     const task = await Task.create({
       ...data,
@@ -96,7 +88,7 @@ export const createTask = async (req: AuthRequest, res: Response, next: NextFunc
  */
 export const updateTask = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const data = req.body as z.infer<typeof updateTaskSchema>;
+    const data = req.body as UpdateTaskInput;
 
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, owner: req.user?.userId },

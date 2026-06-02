@@ -7,9 +7,8 @@ import {
   createTask,
   updateTask,
   deleteTask,
-  createTaskSchema,
-  updateTaskSchema,
 } from '../controllers/taskController';
+import { createTaskSchema, updateTaskSchema } from '../schemas/taskSchemas';
 
 const router = Router();
 

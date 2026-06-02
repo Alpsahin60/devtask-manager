@@ -1,33 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { User } from '../models/User';
-import { 
-  generateAccessToken, 
-  generateRefreshToken, 
-  verifyRefreshToken, 
-  getTokenExpiration 
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+  getTokenExpiration,
 } from '../utils/jwt';
 import { AppError } from '../middleware/errorMiddleware';
 import { SecurityService } from '../services/SecurityService';
 import { TokenBlacklistService } from '../models/BlacklistedToken';
 import { AuthRequest } from '../types';
+import type { RegisterInput, LoginInput } from '../schemas/authSchemas';
 
-// ─── Validation Schemas ───────────────────────────────────────────────────────
-
-export const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name too long'),
-  email: z.string().email('Invalid email format').toLowerCase(),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(128, 'Password too long')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
-           'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character')
-});
-
-export const loginSchema = z.object({
-  email: z.string().email('Invalid email format').toLowerCase(),
-  password: z.string().min(1, 'Password is required'),
-});
+// Validation schemas live in schemas/authSchemas.ts — single source of truth.
+// Routes apply them via validate(); controllers consume the inferred types
+// for type-safety only and trust the already-validated req.body.
 
 // ─── Cookie Helper ────────────────────────────────────────────────────────────
 
@@ -47,7 +34,7 @@ const REFRESH_COOKIE_OPTIONS = {
  */
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { name, email, password } = req.body as z.infer<typeof registerSchema>;
+    const { name, email, password } = req.body as RegisterInput;
     const clientInfo = SecurityService.getClientInfo(req);
 
     // Check for suspicious registration activity
@@ -114,7 +101,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
  */
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { email, password } = req.body as z.infer<typeof loginSchema>;
+    const { email, password } = req.body as LoginInput;
     const clientInfo = SecurityService.getClientInfo(req);
 
     // Check for suspicious activity first

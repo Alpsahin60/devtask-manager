@@ -7,9 +7,8 @@ import {
   logout,
   refresh,
   getMe,
-  registerSchema,
-  loginSchema,
 } from '../controllers/authController';
+import { registerSchema, loginSchema } from '../schemas/authSchemas';
 
 const router = Router();
 

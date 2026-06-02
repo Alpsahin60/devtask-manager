@@ -5,11 +5,16 @@ import {
   getBlacklistedTokens,
   performUserAction,
   getSecurityAnalytics,
-  requireAdmin
+  requireAdmin,
 } from '../controllers/adminSecurityController';
 import { protect } from '../middleware/authMiddleware';
 import { validate } from '../middleware/validationMiddleware';
-import { userActionSchema } from '../schemas/adminSchemas';
+import {
+  userActionSchema,
+  securityQuerySchema,
+  blacklistQuerySchema,
+  securityAnalyticsQuerySchema,
+} from '../schemas/adminSchemas';
 
 const router = express.Router();
 
@@ -30,7 +35,7 @@ router.get('/dashboard', getSecurityDashboard);
  * @access  Admin only
  * @query   userId, eventType, startDate, endDate, page, limit, ipAddress
  */
-router.get('/events', getSecurityEvents);
+router.get('/events', validate(securityQuerySchema, 'query'), getSecurityEvents);
 
 /**
  * @route   GET /api/admin/security/blacklist
@@ -38,7 +43,7 @@ router.get('/events', getSecurityEvents);
  * @access  Admin only
  * @query   userId, tokenType, reason, page, limit
  */
-router.get('/blacklist', getBlacklistedTokens);
+router.get('/blacklist', validate(blacklistQuerySchema, 'query'), getBlacklistedTokens);
 
 /**
  * @route   POST /api/admin/security/user-action
@@ -54,6 +59,6 @@ router.post('/user-action', validate(userActionSchema), performUserAction);
  * @access  Admin only
  * @query   days (default: 7)
  */
-router.get('/analytics', getSecurityAnalytics);
+router.get('/analytics', validate(securityAnalyticsQuerySchema, 'query'), getSecurityAnalytics);
 
 export default router;

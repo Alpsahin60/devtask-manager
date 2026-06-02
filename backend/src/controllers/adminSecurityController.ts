@@ -1,11 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import { SecurityService } from '../services/SecurityService';
 import { TokenBlacklistService, IBlacklistedToken } from '../models/BlacklistedToken';
 import { User } from '../models/User';
 import { AuthRequest } from '../types';
 import { AppError } from '../middleware/errorMiddleware';
-import type { UserActionInput } from '../schemas/adminSchemas';
+import type {
+  UserActionInput,
+  SecurityQueryInput,
+  BlacklistQueryInput,
+  SecurityAnalyticsQueryInput,
+} from '../schemas/adminSchemas';
 
 // ─── Local Types ───────────────────────────────────────────────────────────
 
@@ -39,29 +43,9 @@ type SecurityAnalyticsData = {
  * Restricted to admin users only
  */
 
-// ─── Validation Schemas ─────────────────────────────────────────────────────
-
-const securityQuerySchema = z.object({
-  userId: z.string().optional(),
-  eventType: z.string().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(20),
-  ipAddress: z.string().optional(),
-});
-
-const blacklistQuerySchema = z.object({
-  userId: z.string().optional(),
-  tokenType: z.enum(['access', 'refresh']).optional(),
-  reason: z.string().optional(),
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(20),
-});
-
-// userActionSchema lives in schemas/adminSchemas.ts — single source of truth.
-// Body is validated by validate(userActionSchema) middleware in adminRoutes, so the
-// controller can trust req.body shape and uses UserActionInput for type-safety only.
+// Validation schemas live in schemas/adminSchemas.ts — single source of truth.
+// Routes apply them via validate(); controllers consume the inferred types
+// for type-safety only and trust the already-validated req.body / req.query.
 
 // ─── Middleware ─────────────────────────────────────────────────────────────
 
@@ -152,8 +136,8 @@ export const getSecurityDashboard = async (_req: AuthRequest, res: Response, nex
  */
 export const getSecurityEvents = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const query = securityQuerySchema.parse(req.query);
-    
+    const query = req.query as unknown as SecurityQueryInput;
+
     const events = await SecurityService.getSecurityEventsWithFilter({
       userId: query.userId,
       eventType: query.eventType,
@@ -185,8 +169,8 @@ export const getSecurityEvents = async (req: Request, res: Response, next: NextF
  */
 export const getBlacklistedTokens = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const query = blacklistQuerySchema.parse(req.query);
-    
+    const query = req.query as unknown as BlacklistQueryInput;
+
     const tokens = await getBlacklistedTokensWithFilter(query);
 
     res.status(200).json({
@@ -283,7 +267,7 @@ export const performUserAction = async (req: AuthRequest, res: Response, next: N
  */
 export const getSecurityAnalytics = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const days = parseInt(req.query.days as string) || 7;
+    const { days } = req.query as unknown as SecurityAnalyticsQueryInput;
     const analytics = await generateSecurityAnalytics(days);
 
     res.status(200).json({
@@ -354,7 +338,7 @@ function getEventSeverity(eventType: string): 'low' | 'medium' | 'high' | 'criti
  * Get blacklisted tokens with filtering
  */
 async function getBlacklistedTokensWithFilter(
-  query: z.infer<typeof blacklistQuerySchema>
+  query: BlacklistQueryInput
 ): Promise<IBlacklistedToken[]> {
   // This would be implemented with the BlacklistedToken model
   // For now, returning a placeholder
