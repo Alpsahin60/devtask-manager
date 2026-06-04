@@ -297,7 +297,7 @@ docs(readme): correct Next.js version
 
 ### Tool-Agnostik
 
-Das Repo bleibt frei von editor- oder assistant-spezifischen Files (keine `*.cursor`, keine `CLAUDE.md` im Repo, keine "Co-Authored-By"-Trailer von Assistenten). Editor-Settings, die nur lokal nützlich sind, gehören in die globale Config, nicht ins Repo.
+Das Repo bleibt frei von editor- oder tooling-spezifischen Files (keine `.cursor/`, keine `.idea/`, keine tooling-spezifischen Markdown-Konfigs im Root, keine Co-Author-Trailer von Drittsystemen). Editor-Settings, die nur lokal nützlich sind, gehören in die globale Config, nicht ins Repo.
 
 ---
 
