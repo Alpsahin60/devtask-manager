@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware';
+import { requireNotDemo } from '../middleware/demoMiddleware';
 import { validate } from '../middleware/validationMiddleware';
 import {
   getTasks,
@@ -15,12 +16,15 @@ const router = Router();
 // All task routes require authentication
 router.use(protect);
 
-router.route('/').get(getTasks).post(validate(createTaskSchema), createTask);
+router
+  .route('/')
+  .get(getTasks)
+  .post(requireNotDemo, validate(createTaskSchema), createTask);
 
 router
   .route('/:id')
   .get(getTaskById)
-  .patch(validate(updateTaskSchema), updateTask)
-  .delete(deleteTask);
+  .patch(requireNotDemo, validate(updateTaskSchema), updateTask)
+  .delete(requireNotDemo, deleteTask);
 
 export default router;

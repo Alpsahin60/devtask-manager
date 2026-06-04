@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware';
+import { requireNotDemo } from '../middleware/demoMiddleware';
 import { validate } from '../middleware/validationMiddleware';
 import { getStandups, upsertStandup } from '../controllers/standupController';
 import { upsertStandupSchema } from '../schemas/standupSchemas';
@@ -13,6 +14,6 @@ router.use(protect);
 router
   .route('/')
   .get(getStandups)
-  .put(validate(upsertStandupSchema), upsertStandup);
+  .put(requireNotDemo, validate(upsertStandupSchema), upsertStandup);
 
 export default router;

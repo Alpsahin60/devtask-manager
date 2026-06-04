@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware';
+import { requireNotDemo } from '../middleware/demoMiddleware';
 import { validate } from '../middleware/validationMiddleware';
 import {
   getSprints,
@@ -25,7 +26,7 @@ router.use(protect);
 router
   .route('/')
   .get(validate(sprintListQuerySchema, 'query'), getSprints)
-  .post(validate(createSprintSchema), createSprint);
+  .post(requireNotDemo, validate(createSprintSchema), createSprint);
 
 // Listed before /:id so Express does not interpret "active" as an id.
 router.get('/active', getActiveSprint);
@@ -33,8 +34,8 @@ router.get('/active', getActiveSprint);
 router
   .route('/:id')
   .get(getSprintById)
-  .patch(validate(updateSprintSchema), updateSprint)
-  .delete(deleteSprint);
+  .patch(requireNotDemo, validate(updateSprintSchema), updateSprint)
+  .delete(requireNotDemo, deleteSprint);
 
 // Nested resources — standups and retros are scoped to a single sprint.
 router.use('/:id/standups', standupRoutes);

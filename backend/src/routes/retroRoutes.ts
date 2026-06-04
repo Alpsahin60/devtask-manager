@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware';
+import { requireNotDemo } from '../middleware/demoMiddleware';
 import { validate } from '../middleware/validationMiddleware';
 import {
   getRetroItems,
@@ -21,11 +22,11 @@ router.use(protect);
 router
   .route('/')
   .get(getRetroItems)
-  .post(validate(createRetroItemSchema), createRetroItem);
+  .post(requireNotDemo, validate(createRetroItemSchema), createRetroItem);
 
 router
   .route('/:itemId')
-  .patch(validate(updateRetroItemSchema), updateRetroItem)
-  .delete(deleteRetroItem);
+  .patch(requireNotDemo, validate(updateRetroItemSchema), updateRetroItem)
+  .delete(requireNotDemo, deleteRetroItem);
 
 export default router;
