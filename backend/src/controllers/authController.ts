@@ -382,7 +382,69 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction)
     res.status(200).json({
       success: true,
       message: 'User profile retrieved',
-      data: { user: { id: user._id, name: user.name, email: user.email } },
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          isDemo: user.isDemo,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/auth/demo-login
+ * Issues a JWT for the seeded demo account so recruiters can browse the app
+ * without registering. The endpoint never accepts credentials — it simply
+ * looks up the user marked `isDemo: true`. The resulting access token carries
+ * `isDemo: true` in its payload so write routes can reject mutations at the
+ * edge via `requireNotDemo`.
+ */
+export const demoLogin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const demoUser = await User.findOne({ isDemo: true });
+    if (!demoUser) {
+      throw new AppError(
+        'Demo-Account ist nicht eingerichtet. Bitte spaeter erneut probieren.',
+        503
+      );
+    }
+
+    const clientInfo = SecurityService.getClientInfo(req);
+    const payload = {
+      userId: demoUser._id.toString(),
+      email: demoUser.email,
+      isDemo: true,
+    };
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    await SecurityService.logEvent({
+      eventType: 'login_success',
+      userId: demoUser._id.toString(),
+      email: demoUser.email,
+      ipAddress: clientInfo.ipAddress,
+      userAgent: clientInfo.userAgent,
+      details: { reason: 'demo-login' },
+    });
+
+    res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
+    res.status(200).json({
+      success: true,
+      message: 'Demo session started',
+      data: {
+        user: {
+          id: demoUser._id,
+          name: demoUser.name,
+          email: demoUser.email,
+          isDemo: true,
+        },
+        accessToken,
+      },
     });
   } catch (error) {
     next(error);
