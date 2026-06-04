@@ -16,6 +16,7 @@ import {
 import authRoutes from './routes/authRoutes';
 import taskRoutes from './routes/taskRoutes';
 import adminRoutes from './routes/adminRoutes';
+import sprintRoutes from './routes/sprintRoutes';
 
 const app = express();
 const PORT = process.env.PORT ?? 5000;
@@ -104,6 +105,7 @@ app.use('/api/auth', noCache);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/sprints', sprintRoutes);
 app.use('/api/admin', adminRoutes);
 
 // 404 handler for unknown routes
