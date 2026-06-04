@@ -61,6 +61,23 @@ The application will be available at:
 - Frontend: http://localhost:3000  
 - Backend API: http://localhost:5000/api
 
+### Demo-Modus (Showcase-Account)
+
+Fuer einen vorgefuellten Demo-Account, der Tasks, Sprints, Standups und
+Retro-Items enthaelt:
+
+```bash
+cd backend
+npm run seed:demo
+```
+
+Das Script ist idempotent — mehrfaches Ausfuehren erzeugt keine Duplikate
+und beruehrt nur den Demo-Nutzer (Owner-Isolation bleibt gewahrt).
+Anschliessend ist auf `/login` der Button **"Demo ansehen"** aktiv und
+fuehrt direkt ins Read-only-Dashboard.
+
+Optionale Env-Overrides: `DEMO_USER_EMAIL`, `DEMO_USER_NAME`, `DEMO_USER_PASSWORD`.
+
 **For detailed setup instructions, see [CONTRIBUTING.md](./CONTRIBUTING.md).**
 
 # Run development server
