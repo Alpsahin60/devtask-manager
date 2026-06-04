@@ -6,6 +6,7 @@ import { Types } from 'mongoose';
 export interface JwtPayload {
   userId: string;
   email: string;
+  isDemo?: boolean;
 }
 
 // Extends Express Request to carry the authenticated user after JWT verification

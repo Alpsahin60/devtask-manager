@@ -5,6 +5,8 @@ export interface IUserDocument extends Document {
   name: string;
   email: string;
   password: string;
+  // Demo / showcase flag — true for the seeded recruiter-facing account.
+  isDemo: boolean;
   // Account security fields
   isLocked: boolean;
   lockedUntil?: Date;
@@ -48,6 +50,12 @@ const userSchema = new Schema<IUserDocument>(
       minlength: [8, 'Password must be at least 8 characters'],
       // Never send password in API responses
       select: false,
+    },
+    // Demo / showcase flag — true for the seeded recruiter-facing account.
+    isDemo: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
     // Account Security Fields
     isLocked: {
