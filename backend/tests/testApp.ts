@@ -2,6 +2,7 @@ import express, { Express } from 'express';
 import cookieParser from 'cookie-parser';
 import { errorHandler } from '../src/middleware/errorMiddleware';
 import authRoutes from '../src/routes/authRoutes';
+import taskRoutes from '../src/routes/taskRoutes';
 import sprintRoutes from '../src/routes/sprintRoutes';
 
 // Test-only app factory — mirrors the route mounting in src/index.ts but
@@ -13,6 +14,7 @@ export const buildTestApp = (): Express => {
   app.use(cookieParser());
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/tasks', taskRoutes);
   app.use('/api/sprints', sprintRoutes);
 
   app.use(errorHandler);
