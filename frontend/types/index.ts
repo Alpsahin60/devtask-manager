@@ -30,3 +30,50 @@ export interface AuthResponse {
   user: User;
   accessToken: string;
 }
+
+// ─── Scrum Types ──────────────────────────────────────────────────────────────
+
+export type SprintStatus = 'planned' | 'active' | 'completed' | 'cancelled';
+export type RetroCategory = 'mad' | 'sad' | 'glad';
+
+export interface Sprint {
+  _id: string;
+  name: string;
+  goal?: string;
+  startDate: string;
+  endDate: string;
+  status: SprintStatus;
+  reviewNotes?: string;
+  owner: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActiveSprintResponse {
+  sprint: Sprint;
+  daysRemaining: number;
+}
+
+export interface StandupEntry {
+  _id: string;
+  sprintId: string;
+  owner: string;
+  date: string;
+  yesterday?: string;
+  today?: string;
+  blockers?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RetroItem {
+  _id: string;
+  sprintId: string;
+  owner: string;
+  category: RetroCategory;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RetroGrouped = Record<RetroCategory, RetroItem[]>;

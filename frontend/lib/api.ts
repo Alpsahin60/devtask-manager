@@ -1,5 +1,15 @@
 import axios from 'axios';
-import { ApiResponse, AuthResponse, Task } from '@/types';
+import {
+  ApiResponse,
+  AuthResponse,
+  Task,
+  Sprint,
+  SprintStatus,
+  ActiveSprintResponse,
+  StandupEntry,
+  RetroItem,
+  RetroGrouped,
+} from '@/types';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api',
@@ -95,6 +105,75 @@ export const tasksApi = {
 
   delete: (id: string) =>
     api.delete<ApiResponse<null>>(`/tasks/${id}`),
+};
+
+// ─── Scrum API ────────────────────────────────────────────────────────────────
+
+export interface CreateSprintPayload {
+  name: string;
+  goal?: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface UpdateSprintPayload {
+  name?: string;
+  goal?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: SprintStatus;
+  reviewNotes?: string;
+}
+
+export interface UpsertStandupPayload {
+  date: string;
+  yesterday?: string;
+  today?: string;
+  blockers?: string;
+}
+
+export interface CreateRetroItemPayload {
+  category: 'mad' | 'sad' | 'glad';
+  content: string;
+}
+
+export const sprintsApi = {
+  getAll: (filters?: { status?: SprintStatus }) =>
+    api.get<ApiResponse<Sprint[]>>('/sprints', { params: filters }),
+
+  getActive: () =>
+    api.get<ApiResponse<ActiveSprintResponse | null>>('/sprints/active'),
+
+  getById: (id: string) =>
+    api.get<ApiResponse<Sprint>>(`/sprints/${id}`),
+
+  create: (data: CreateSprintPayload) =>
+    api.post<ApiResponse<Sprint>>('/sprints', data),
+
+  update: (id: string, data: UpdateSprintPayload) =>
+    api.patch<ApiResponse<Sprint>>(`/sprints/${id}`, data),
+
+  delete: (id: string) =>
+    api.delete<ApiResponse<null>>(`/sprints/${id}`),
+};
+
+export const standupsApi = {
+  list: (sprintId: string) =>
+    api.get<ApiResponse<StandupEntry[]>>(`/sprints/${sprintId}/standups`),
+
+  upsert: (sprintId: string, data: UpsertStandupPayload) =>
+    api.put<ApiResponse<StandupEntry>>(`/sprints/${sprintId}/standups`, data),
+};
+
+export const retroApi = {
+  list: (sprintId: string) =>
+    api.get<ApiResponse<RetroGrouped>>(`/sprints/${sprintId}/retro`),
+
+  create: (sprintId: string, data: CreateRetroItemPayload) =>
+    api.post<ApiResponse<RetroItem>>(`/sprints/${sprintId}/retro`, data),
+
+  delete: (sprintId: string, itemId: string) =>
+    api.delete<ApiResponse<null>>(`/sprints/${sprintId}/retro/${itemId}`),
 };
 
 export default api;
