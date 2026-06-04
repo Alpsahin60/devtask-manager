@@ -83,6 +83,10 @@ export const authApi = {
   login: (email: string, password: string) =>
     api.post<ApiResponse<AuthResponse>>('/auth/login', { email, password }),
 
+  // Recruiter-facing one-click login for the seeded showcase account.
+  // No payload required; the backend looks up the user with isDemo = true.
+  demoLogin: () => api.post<ApiResponse<AuthResponse>>('/auth/demo-login'),
+
   logout: () => api.post<ApiResponse<null>>('/auth/logout'),
 
   me: () => api.get<ApiResponse<{ user: import('@/types').User }>>('/auth/me'),

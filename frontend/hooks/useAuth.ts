@@ -10,6 +10,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  demoLogin: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -61,6 +62,15 @@ export const useAuthProvider = (): AuthContextValue => {
     }
   };
 
+  const demoLogin = async () => {
+    const { data } = await authApi.demoLogin();
+    if (data.data) {
+      setAccessToken(data.data.accessToken);
+      setUser(data.data.user);
+      router.push('/dashboard');
+    }
+  };
+
   const logout = async () => {
     await authApi.logout();
     setAccessToken(null);
@@ -68,5 +78,5 @@ export const useAuthProvider = (): AuthContextValue => {
     router.push('/login');
   };
 
-  return { user, isLoading, login, register, logout };
+  return { user, isLoading, login, register, demoLogin, logout };
 };
