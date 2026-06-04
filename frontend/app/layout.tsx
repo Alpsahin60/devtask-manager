@@ -5,6 +5,7 @@ import { AuthProvider } from '@/components/auth/AuthProvider';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ToastProvider } from '@/hooks/useToast';
+import { DemoBanner } from '@/components/ui/DemoBanner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,7 +21,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ErrorBoundary>
           <ThemeProvider>
             <ToastProvider>
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                <DemoBanner />
+                {children}
+              </AuthProvider>
             </ToastProvider>
           </ThemeProvider>
         </ErrorBoundary>

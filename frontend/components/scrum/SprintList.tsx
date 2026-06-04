@@ -5,7 +5,7 @@ import { SprintCard } from './SprintCard';
 
 interface SprintListProps {
   sprints: Sprint[];
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 const SECTIONS: { status: SprintStatus; title: string }[] = [

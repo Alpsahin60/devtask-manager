@@ -16,8 +16,9 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { login, user, isLoading } = useAuth();
+  const { login, demoLogin, user, isLoading } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,6 +40,21 @@ export default function LoginPage() {
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         'Login failed. Please try again.';
       setServerError(message);
+    }
+  };
+
+  const onDemoLogin = async () => {
+    setServerError(null);
+    setIsDemoLoading(true);
+    try {
+      await demoLogin();
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Demo ist gerade nicht verfuegbar. Bitte spaeter erneut versuchen.';
+      setServerError(message);
+    } finally {
+      setIsDemoLoading(false);
     }
   };
 
@@ -92,12 +108,32 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isDemoLoading}
               className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               {isSubmitting ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
+
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+            <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              oder
+            </span>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+          </div>
+
+          <button
+            type="button"
+            onClick={onDemoLogin}
+            disabled={isSubmitting || isDemoLoading}
+            className="w-full mt-4 py-2.5 px-4 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isDemoLoading ? 'Demo wird geladen...' : 'Demo ansehen'}
+          </button>
+          <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">
+            Read-only Showcase mit gestellten Daten — kein Account noetig.
+          </p>
 
           <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             Don&apos;t have an account?{' '}

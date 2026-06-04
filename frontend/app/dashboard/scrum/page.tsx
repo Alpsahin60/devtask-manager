@@ -82,12 +82,14 @@ export default function ScrumPage() {
               {user?.name}
             </span>
             <ThemeToggle />
-            <button
-              onClick={() => setModalOpen(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
-            >
-              + Neuer Sprint
-            </button>
+            {!user?.isDemo && (
+              <button
+                onClick={() => setModalOpen(true)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
+              >
+                + Neuer Sprint
+              </button>
+            )}
             <button
               onClick={logout}
               className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
@@ -113,7 +115,7 @@ export default function ScrumPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
           ) : (
-            <SprintList sprints={sprints} onDelete={handleDelete} />
+            <SprintList sprints={sprints} onDelete={user?.isDemo ? undefined : handleDelete} />
           )}
         </div>
       </main>
